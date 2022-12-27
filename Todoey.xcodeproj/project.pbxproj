@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B47CC010295B9156005EB745 /* ToDo.swift in Sources */ = {isa = PBXBuildFile; fileRef = B47CC00F295B9156005EB745 /* ToDo.swift */; };
 		B4EB8C6F295B62FA0066A349 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4EB8C6E295B62FA0066A349 /* AppDelegate.swift */; };
 		B4EB8C71295B62FA0066A349 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4EB8C70295B62FA0066A349 /* SceneDelegate.swift */; };
 		B4EB8C73295B62FA0066A349 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4EB8C72295B62FA0066A349 /* ViewController.swift */; };
@@ -17,6 +18,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		B47CC00F295B9156005EB745 /* ToDo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToDo.swift; sourceTree = "<group>"; };
 		B4EB8C6B295B62FA0066A349 /* Todoey.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Todoey.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B4EB8C6E295B62FA0066A349 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		B4EB8C70295B62FA0066A349 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -39,6 +41,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		B47CC00E295B912C005EB745 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				B47CC00F295B9156005EB745 /* ToDo.swift */,
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
 		B4EB8C62295B62FA0066A349 = {
 			isa = PBXGroup;
 			children = (
@@ -58,6 +68,7 @@
 		B4EB8C6D295B62FA0066A349 /* Todoey */ = {
 			isa = PBXGroup;
 			children = (
+				B47CC00E295B912C005EB745 /* Model */,
 				B4EB8C6E295B62FA0066A349 /* AppDelegate.swift */,
 				B4EB8C70295B62FA0066A349 /* SceneDelegate.swift */,
 				B4EB8C82295B6AE70066A349 /* Controller */,
@@ -158,6 +169,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B4EB8C73295B62FA0066A349 /* ViewController.swift in Sources */,
+				B47CC010295B9156005EB745 /* ToDo.swift in Sources */,
 				B4EB8C6F295B62FA0066A349 /* AppDelegate.swift in Sources */,
 				B4EB8C85295B72250066A349 /* CustomTableViewCell.swift in Sources */,
 				B4EB8C71295B62FA0066A349 /* SceneDelegate.swift in Sources */,

@@ -22,7 +22,7 @@ class ViewController: UIViewController {
         let alert = UIAlertController(title: "Add New Todoey Item", message: "", preferredStyle: .alert)
         
         let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
-            self.itemArray.append(textField.text!)
+            self.itemArray.append(Todo(description: textField.text!, done: false))
             
             self.defaults.set(self.itemArray, forKey: "TodoListArray")
             
@@ -39,7 +39,7 @@ class ViewController: UIViewController {
         present(alert, animated: true, completion: nil)
     }
     
-    var itemArray = ["Find mike", "Buy Eggos", "Destroy Demogorgon"]
+    var itemArray = [Todo(description: "Find mike", done: false), Todo(description: "Buy eggos", done: false), Todo(description: "Destroy Demogorgon", done: false), Todo(description: "A", done: false), Todo(description: "B", done: false), Todo(description: "C", done: false), Todo(description: "D", done: false), Todo(description: "E", done: false), Todo(description: "F", done: false), Todo(description: "G", done: false), Todo(description: "H", done: false), Todo(description: "I", done: false), Todo(description: "J", done: false), Todo(description: "K", done: false), Todo(description: "L", done: false), Todo(description: "M", done: false), Todo(description: "N", done: false), Todo(description: "X", done: false), Todo(description: "Y", done: false), Todo(description: "Z", done: false)]
     let defaults = UserDefaults.standard
     
     override func viewDidLoad() {
@@ -49,7 +49,7 @@ class ViewController: UIViewController {
         tableView.delegate = self
         tableView.dataSource = self
         
-        if let items = defaults.array(forKey: "TodoListArray") as? [String] {
+        if let items = defaults.array(forKey: "TodoListArray") as? [Todo] {
             itemArray = items
         }
     }
@@ -70,16 +70,23 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource {
             for: indexPath
         ) as! CustomTableViewCell
         
-        cell.content = itemArray[indexPath.row]
+        cell.content = itemArray[indexPath.row].description
+        
+        if itemArray[indexPath.row].done == true {
+            cell.accessoryType = .checkmark
+        }
+        
         return cell
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         print(itemArray[indexPath.row])
         
-        if tableView.cellForRow(at: indexPath)?.accessoryType == .checkmark {
+        if itemArray[indexPath.row].done == true {
+            itemArray[indexPath.row].done = false
             tableView.cellForRow(at: indexPath)?.accessoryType = .none
         } else {
+            itemArray[indexPath.row].done = true
             tableView.cellForRow(at: indexPath)?.accessoryType = .checkmark
         }
         
