@@ -8,9 +8,15 @@
 import UIKit
 import CoreData
 
-class ViewController: UIViewController {
+class TodoListViewController: UIViewController {
     let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     let search = UISearchController()
+    var itemArray: [Todo] = []
+    var selectedCategory : Category? {
+        didSet{
+            loadItems()
+        }
+    }
     
     private let tableView: UITableView = {
         let table = UITableView()
@@ -27,7 +33,7 @@ class ViewController: UIViewController {
             let newItem = Todo(context: self.context)
             newItem.done = false
             newItem.title = textField.text!
-            print(newItem)
+            newItem.parentCategory = self.selectedCategory
             
             self.itemArray.append(newItem)
             self.saveItems()
@@ -53,7 +59,15 @@ class ViewController: UIViewController {
         self.tableView.reloadData()
     }
     
-    func loadItems(with request: NSFetchRequest<Todo> = Todo.fetchRequest()) {
+    func loadItems(with request: NSFetchRequest<Todo> = Todo.fetchRequest(), predicate: NSPredicate? = nil) {
+        let categoryPredicate = NSPredicate(format: "parentCategory.name MATCHES %@", selectedCategory!.name!)
+        
+        if let addtionalPredicate = predicate {
+            request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [categoryPredicate, addtionalPredicate])
+        } else {
+            request.predicate = categoryPredicate
+        }
+
         do {
             itemArray = try context.fetch(request)
         } catch {
@@ -61,8 +75,6 @@ class ViewController: UIViewController {
         }
         tableView.reloadData()
     }
-    
-    var itemArray: [Todo] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -74,14 +86,12 @@ class ViewController: UIViewController {
         search.searchResultsUpdater = self
         search.obscuresBackgroundDuringPresentation = false
         navigationItem.searchController = search
-        
-        loadItems()
     }
 }
 
 //MARK: - UITableViewDelegate
 
-extension ViewController: UITableViewDelegate, UITableViewDataSource {
+extension TodoListViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return itemArray.count
@@ -103,7 +113,6 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        print(itemArray[indexPath.row])
         
         // delete when pressed
 //        context.delete(itemArray[indexPath.row])
@@ -120,16 +129,15 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource {
 
 //MARK: - UISearchResultsUpdating
 
-extension ViewController: UISearchResultsUpdating {
+extension TodoListViewController: UISearchResultsUpdating {
     func updateSearchResults(for searchController: UISearchController) {
         if let text = searchController.searchBar.text {
             if text.count > 0 {
                 let request: NSFetchRequest<Todo> = Todo.fetchRequest()
                 
                 request.predicate = NSPredicate(format: "title CONTAINS[c] %@", text)
-                request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
                 
-                loadItems(with: request)
+                loadItems(with: request, predicate: request.predicate!)
             } else {
                 loadItems()
             }
