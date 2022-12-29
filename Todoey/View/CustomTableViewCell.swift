@@ -10,7 +10,7 @@ import UIKit
 class CustomTableViewCell: UITableViewCell {
     
     static let identifier = "CustomTableViewCell"
-    var content: String!
+    var content: String?
     
     override func updateConfiguration(using state: UICellConfigurationState) {
         super.updateConfiguration(using: state)
