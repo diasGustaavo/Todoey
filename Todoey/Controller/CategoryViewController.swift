@@ -71,6 +71,19 @@ class CategoryViewController: UIViewController {
         
         tableView.reloadData()
     }
+    
+    func deleteCategory(row: Int) {
+        if let cat = categories?[row] {
+            do {
+                try realm.write {
+//                    delete item when clicked
+                    realm.delete(cat)
+                }
+            } catch {
+                print("error deleting item, \(error)")
+            }
+        }
+    }
 }
 
 //MARK: - UITableViewDelegate, UITableViewDataSource
@@ -96,6 +109,19 @@ extension CategoryViewController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         performSegue(withIdentifier: "goToItems", sender: self)
         tableView.deselectRow(at: indexPath, animated: true)
+    }
+    
+    func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        let action = UIContextualAction(style: .destructive, title: "Delete") { [weak self] (action, view, completionHandler) in
+            self?.deleteCategory(row: indexPath.row)
+            tableView.deleteRows(at: [indexPath], with: UITableView.RowAnimation.bottom)
+            completionHandler(true)
+        }
+        return UISwipeActionsConfiguration(actions: [action])
+    }
+    
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 80.0;//Choose your custom row height
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {

@@ -62,6 +62,19 @@ class TodoListViewController: UIViewController {
         tableView.reloadData()
     }
     
+    func deleteItem(row: Int) {
+        if let item = todoItems?[row] {
+            do {
+                try realm.write {
+//                    delete item when clicked
+                    realm.delete(item)
+                }
+            } catch {
+                print("error deleting item, \(error)")
+            }
+        }
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         view.addSubview(tableView)
@@ -81,6 +94,10 @@ extension TodoListViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return todoItems?.count ?? 1
+    }
+    
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 80.0;//Choose your custom row height
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -105,9 +122,6 @@ extension TodoListViewController: UITableViewDelegate, UITableViewDataSource {
         if let item = todoItems?[indexPath.row] {
             do {
                 try realm.write {
-//                    delete item when clicked
-//                    realm.delete(item)
-                    
 //                    select/deselect item when clicked
                     item.done = !item.done
                 }
@@ -117,6 +131,15 @@ extension TodoListViewController: UITableViewDelegate, UITableViewDataSource {
         }
         
         tableView.reloadData()
+    }
+    
+    func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        let action = UIContextualAction(style: .destructive, title: "Delete") { [weak self] (action, view, completionHandler) in
+            self?.deleteItem(row: indexPath.row)
+            tableView.deleteRows(at: [indexPath], with: UITableView.RowAnimation.bottom)
+            completionHandler(true)
+        }
+        return UISwipeActionsConfiguration(actions: [action])
     }
 }
 
