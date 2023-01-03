@@ -7,6 +7,8 @@
 
 import UIKit
 import RealmSwift
+import RandomColor
+import UIColorHexSwift
 
 class CategoryViewController: UIViewController {
     
@@ -26,10 +28,10 @@ class CategoryViewController: UIViewController {
         tableView.frame = view.bounds
         tableView.delegate = self
         tableView.dataSource = self
+        tableView.separatorStyle = .none
         
         loadCategories()
     }
-    
     
     @IBAction func addCategoryPressed(_ sender: UIBarButtonItem) {
         var textField = UITextField()
@@ -39,6 +41,7 @@ class CategoryViewController: UIViewController {
         let action = UIAlertAction(title: "Add Category", style: .default) { (action) in
             let newCategory = Category()
             newCategory.name = textField.text!
+            newCategory.colour = self.generateRandomHEXColor()
             
             self.save(category: newCategory)
         }
@@ -84,6 +87,10 @@ class CategoryViewController: UIViewController {
             }
         }
     }
+    
+    func generateRandomHEXColor() -> String {
+        return randomColor(hue: .random, luminosity: .light).hexString()
+    }
 }
 
 //MARK: - UITableViewDelegate, UITableViewDataSource
@@ -102,6 +109,7 @@ extension CategoryViewController: UITableViewDelegate, UITableViewDataSource {
         ) as! CustomTableViewCell
         
         cell.content = categories?[indexPath.row].name ?? "No category registred"
+        cell.backgroundColor = UIColor(categories?[indexPath.row].colour ?? "#FFF")
         
         return cell
     }

@@ -7,6 +7,8 @@
 
 import UIKit
 import RealmSwift
+import RandomColor
+import UIColorHexSwift
 
 class TodoListViewController: UIViewController {
     let realm = try! Realm()
@@ -37,6 +39,7 @@ class TodoListViewController: UIViewController {
                         let newItem = Todo()
                         newItem.title = textField.text!
                         newItem.dateCreated = Date()
+                        newItem.colour = self.generateRandomHEXColor()
                         currentCategory.items.append(newItem)
                     }
                 } catch {
@@ -58,7 +61,7 @@ class TodoListViewController: UIViewController {
     }
     
     func loadItems() {
-        todoItems = selectedCategory?.items.sorted(byKeyPath: "title", ascending: true)
+        todoItems = selectedCategory?.items.sorted(byKeyPath: "dateCreated", ascending: false)
         tableView.reloadData()
     }
     
@@ -75,12 +78,17 @@ class TodoListViewController: UIViewController {
         }
     }
     
+    func generateRandomHEXColor() -> String {
+        return randomColor(hue: .random, luminosity: .light).hexString()
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         view.addSubview(tableView)
         tableView.frame = view.bounds
         tableView.delegate = self
         tableView.dataSource = self
+        tableView.separatorStyle = .none
         
         search.searchResultsUpdater = self
         search.obscuresBackgroundDuringPresentation = false
@@ -110,6 +118,7 @@ extension TodoListViewController: UITableViewDelegate, UITableViewDataSource {
         if let item = todoItems?[indexPath.row] {
             cell.content = item.title
             cell.accessoryType = item.done ? .checkmark : .none
+            cell.backgroundColor = UIColor(todoItems?[indexPath.row].colour ?? "#FFF")
         } else {
             cell.content = "No items added"
         }
