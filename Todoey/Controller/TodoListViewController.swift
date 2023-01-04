@@ -6,19 +6,11 @@
 //
 
 import UIKit
-import RealmSwift
-import RandomColor
 import UIColorHexSwift
 
 class TodoListViewController: UIViewController {
-    let realm = try! Realm()
+    var todoManager = TodoManager()
     let search = UISearchController()
-    var todoItems: Results<Todo>?
-    var selectedCategory : Category? {
-        didSet {
-            loadItems()
-        }
-    }
     
     private let tableView: UITableView = {
         let table = UITableView()
@@ -32,22 +24,7 @@ class TodoListViewController: UIViewController {
         let alert = UIAlertController(title: "Add New Todoey Item", message: "", preferredStyle: .alert)
         
         let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
-            
-            if let currentCategory = self.selectedCategory {
-                do {
-                    try self.realm.write{
-                        let newItem = Todo()
-                        newItem.title = textField.text!
-                        newItem.dateCreated = Date()
-                        let colourPercentage = 10 * (self.todoItems?.count ?? 0)
-                        newItem.colour = UIColor(self.selectedCategory?.colour ?? "#FFF").toColor(color: UIColor.black, percentage: CGFloat(colourPercentage)).hexString()
-                        currentCategory.items.append(newItem)
-                    }
-                } catch {
-                    print("Error saving context \(error)")
-                }
-            }
-            
+            self.todoManager.saveItem(title: textField.text!)
             self.tableView.reloadData()
         }
         
@@ -61,28 +38,10 @@ class TodoListViewController: UIViewController {
         present(alert, animated: true, completion: nil)
     }
     
-    func loadItems() {
-        todoItems = selectedCategory?.items.sorted(byKeyPath: "dateCreated", ascending: true)
-        tableView.reloadData()
-    }
-    
-    func deleteItem(row: Int) {
-        if let item = todoItems?[row] {
-            do {
-                try realm.write {
-                    //                    delete item when clicked
-                    realm.delete(item)
-                }
-            } catch {
-                print("error deleting item, \(error)")
-            }
-        }
-    }
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.title = selectedCategory?.name
+        self.title = todoManager.selectedCategory?.name
         
         view.addSubview(tableView)
         tableView.frame = view.bounds
@@ -98,9 +57,9 @@ class TodoListViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        self.navigationController?.navigationBar.scrollEdgeAppearance?.backgroundColor = UIColor(selectedCategory?.colour ?? "#FFF")
-        self.navigationController?.navigationBar.standardAppearance.backgroundColor = UIColor(selectedCategory?.colour ?? "#FFF")
-        self.title = selectedCategory?.name
+        self.navigationController?.navigationBar.scrollEdgeAppearance?.backgroundColor = UIColor(todoManager.selectedCategory?.colour ?? "#FFF")
+        self.navigationController?.navigationBar.standardAppearance.backgroundColor = UIColor(todoManager.selectedCategory?.colour ?? "#FFF")
+        self.title = todoManager.selectedCategory?.name
     }
 }
 
@@ -109,7 +68,7 @@ class TodoListViewController: UIViewController {
 extension TodoListViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return todoItems?.count ?? 1
+        return todoManager.getItemsCounter()
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
@@ -123,17 +82,11 @@ extension TodoListViewController: UITableViewDelegate, UITableViewDataSource {
             for: indexPath
         ) as! CustomTableViewCell
         
-        if let item = todoItems?[indexPath.row] {
+        if let item = todoManager.todoItems?[indexPath.row] {
             cell.content = item.title
             cell.accessoryType = item.done ? .checkmark : .none
-            cell.backgroundColor = UIColor(todoItems?[indexPath.row].colour ?? "#FFF")
-            
-            var colourPercentage = (10 * indexPath.row) + 25
-            if colourPercentage >= 60 && colourPercentage <= 70 {
-                colourPercentage = 80
-            }
-            let selectedCatColour = UIColor(selectedCategory?.colour ?? "#FFF")
-            cell.textColor = UIColor(.black).toColor(color: selectedCatColour, percentage: CGFloat(colourPercentage))
+            cell.backgroundColor = todoManager.getItemBackgroundColour(indexRow: indexPath.row)
+            cell.textColor = todoManager.getItemTextColour(indexRow: indexPath.row)
         } else {
             cell.content = "No items added"
         }
@@ -142,23 +95,13 @@ extension TodoListViewController: UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        if let item = todoItems?[indexPath.row] {
-            do {
-                try realm.write {
-                    //                    select/deselect item when clicked
-                    item.done = !item.done
-                }
-            } catch {
-                print("error saving done status, \(error)")
-            }
-        }
-        
+        todoManager.selectedItem(indexRow: indexPath.row)
         tableView.reloadData()
     }
     
     func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         let action = UIContextualAction(style: .destructive, title: "Delete") { [weak self] (action, view, completionHandler) in
-            self?.deleteItem(row: indexPath.row)
+            self?.todoManager.deleteItem(row: indexPath.row)
             tableView.deleteRows(at: [indexPath], with: UITableView.RowAnimation.bottom)
             completionHandler(true)
         }
@@ -171,14 +114,8 @@ extension TodoListViewController: UITableViewDelegate, UITableViewDataSource {
 extension TodoListViewController: UISearchResultsUpdating {
     func updateSearchResults(for searchController: UISearchController) {
         if let text = searchController.searchBar.text {
-            if text.count > 0 {
-                todoItems = todoItems?.filter("title CONTAINS[cd] %@", searchController.searchBar.text!).sorted(byKeyPath: "dateCreated", ascending: false)
-                tableView.reloadData()
-            } else {
-                loadItems()
-            }
-        } else {
-            loadItems()
+            todoManager.filterItems(with: text)
+            tableView.reloadData()
         }
     }
 }

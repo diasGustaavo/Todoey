@@ -6,15 +6,9 @@
 //
 
 import UIKit
-import RealmSwift
-import RandomColor
-import UIColorHexSwift
 
 class CategoryViewController: UIViewController {
-    
-    let realm = try! Realm()
-    
-    var categories: Results<Category>?
+    var categoryManager = CategoryManager()
     
     private let tableView: UITableView = {
         let table = UITableView()
@@ -30,7 +24,8 @@ class CategoryViewController: UIViewController {
         tableView.dataSource = self
         tableView.separatorStyle = .none
         
-        loadCategories()
+        categoryManager.loadCategories()
+        tableView.reloadData()
     }
     
     @IBAction func addCategoryPressed(_ sender: UIBarButtonItem) {
@@ -39,13 +34,10 @@ class CategoryViewController: UIViewController {
         let alert = UIAlertController(title: "Add New Todoey Category", message: "", preferredStyle: .alert)
         
         let action = UIAlertAction(title: "Add Category", style: .default) { (action) in
-            let newCategory = Category()
-            newCategory.name = textField.text!
-            newCategory.colour = self.generateRandomHEXColor()
-            
-            self.save(category: newCategory)
-            self.navigationController?.navigationBar.scrollEdgeAppearance?.backgroundColor = UIColor(self.categories?[(self.categories?.count ?? 1) - 1 ].colour ?? "#FFF")
-            self.navigationController?.navigationBar.standardAppearance.backgroundColor = UIColor(self.categories?[(self.categories?.count ?? 1) - 1 ].colour ?? "#FFF")
+            self.categoryManager.addCategory(title: textField.text!)
+            self.navigationController?.navigationBar.scrollEdgeAppearance?.backgroundColor = self.categoryManager.getNewNavColour()
+            self.navigationController?.navigationBar.standardAppearance.backgroundColor = self.categoryManager.getNewNavColour()
+            self.tableView.reloadData()
         }
         
         alert.addTextField { alertTextField in
@@ -57,42 +49,6 @@ class CategoryViewController: UIViewController {
         
         present(alert, animated: true, completion: nil)
     }
-    
-    func save(category: Category) {
-        do {
-            try realm.write{
-                realm.add(category)
-            }
-        } catch {
-            print("Error saving context \(error)")
-        }
-        
-        self.tableView.reloadData()
-    }
-    
-    func loadCategories() {
-        
-        categories = realm.objects(Category.self)
-        
-        tableView.reloadData()
-    }
-    
-    func deleteCategory(row: Int) {
-        if let cat = categories?[row] {
-            do {
-                try realm.write {
-//                    delete item when clicked
-                    realm.delete(cat)
-                }
-            } catch {
-                print("error deleting item, \(error)")
-            }
-        }
-    }
-    
-    func generateRandomHEXColor() -> String {
-        return randomColor(hue: .random, luminosity: .light).hexString()
-    }
 }
 
 //MARK: - UITableViewDelegate, UITableViewDataSource
@@ -100,7 +56,7 @@ class CategoryViewController: UIViewController {
 extension CategoryViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return categories?.count ?? 1
+        return categoryManager.getCategoriesCounter()
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -110,8 +66,8 @@ extension CategoryViewController: UITableViewDelegate, UITableViewDataSource {
             for: indexPath
         ) as! CustomTableViewCell
         
-        cell.content = categories?[indexPath.row].name ?? "No category registred"
-        cell.backgroundColor = UIColor(categories?[indexPath.row].colour ?? "#FFF")
+        cell.content = categoryManager.getCategoryName(index: indexPath.row)
+        cell.backgroundColor = categoryManager.getCategoryColour(index: indexPath.row)
         
         return cell
     }
@@ -123,7 +79,7 @@ extension CategoryViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         let action = UIContextualAction(style: .destructive, title: "Delete") { [weak self] (action, view, completionHandler) in
-            self?.deleteCategory(row: indexPath.row)
+            self?.categoryManager.deleteCategory(row: indexPath.row)
             tableView.deleteRows(at: [indexPath], with: UITableView.RowAnimation.bottom)
             completionHandler(true)
         }
@@ -137,7 +93,7 @@ extension CategoryViewController: UITableViewDelegate, UITableViewDataSource {
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         let destVC = segue.destination as! TodoListViewController
         if let indexPath = tableView.indexPathForSelectedRow {
-            destVC.selectedCategory = categories?[indexPath.row]
+            destVC.todoManager.selectedCategory = categoryManager.categories?[indexPath.row]
         }
     }
 }
