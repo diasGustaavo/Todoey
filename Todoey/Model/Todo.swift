@@ -12,6 +12,7 @@ class Todo: Object {
     @objc dynamic var title: String = ""
     @objc dynamic var done: Bool = false
     @objc dynamic var dateCreated: Date?
-    @objc dynamic var colour: String?
+    @objc dynamic var backgroundColour: String?
+    @objc dynamic var textColour: String?
     var parentCategory = LinkingObjects(fromType: Category.self, property: "items")
 }

@@ -32,7 +32,8 @@ struct TodoManager {
                 newItem.title = title
                 newItem.dateCreated = Date()
                 let colourPercentage = 10 * (self.todoItems?.count ?? 0)
-                newItem.colour = UIColor(self.selectedCategory?.colour ?? "#FFF").toColor(color: UIColor.black, percentage: CGFloat(colourPercentage)).hexString()
+                newItem.backgroundColour = UIColor(self.selectedCategory?.colour ?? "#FFF").toColor(color: UIColor.black, percentage: CGFloat(colourPercentage)).hexString()
+                newItem.textColour = getNewItemTextColour(indexRow: self.todoItems!.count)
                 selectedCategory?.items.append(newItem)
             }
         } catch {
@@ -54,16 +55,20 @@ struct TodoManager {
     }
     
     func getItemBackgroundColour(indexRow: Int) -> UIColor {
-        return UIColor(todoItems?[indexRow].colour ?? "#FFF")
+        return UIColor(todoItems?[indexRow].backgroundColour ?? "#FFF")
     }
     
     func getItemTextColour(indexRow: Int) -> UIColor {
+        return UIColor(todoItems?[indexRow].textColour ?? "#FFF")
+    }
+    
+    func getNewItemTextColour(indexRow: Int) -> String {
         var colourPercentage = (10 * indexRow) + 25
         if colourPercentage >= 60 && colourPercentage <= 70 {
             colourPercentage = 80
         }
         let selectedCatColour = UIColor(selectedCategory?.colour ?? "#FFF")
-        return UIColor(.black).toColor(color: selectedCatColour, percentage: CGFloat(colourPercentage))
+        return UIColor(.black).toColor(color: selectedCatColour, percentage: CGFloat(colourPercentage)).hexString()
     }
     
     func selectedItem(indexRow: Int) {
