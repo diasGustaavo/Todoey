@@ -39,7 +39,8 @@ class TodoListViewController: UIViewController {
                         let newItem = Todo()
                         newItem.title = textField.text!
                         newItem.dateCreated = Date()
-                        newItem.colour = self.generateRandomHEXColor()
+                        let colourPercentage = 10 * (self.todoItems?.count ?? 0)
+                        newItem.colour = UIColor(self.selectedCategory?.colour ?? "#FFF").toColor(color: UIColor.black, percentage: CGFloat(colourPercentage)).hexString()
                         currentCategory.items.append(newItem)
                     }
                 } catch {
@@ -61,7 +62,7 @@ class TodoListViewController: UIViewController {
     }
     
     func loadItems() {
-        todoItems = selectedCategory?.items.sorted(byKeyPath: "dateCreated", ascending: false)
+        todoItems = selectedCategory?.items.sorted(byKeyPath: "dateCreated", ascending: true)
         tableView.reloadData()
     }
     
@@ -69,7 +70,7 @@ class TodoListViewController: UIViewController {
         if let item = todoItems?[row] {
             do {
                 try realm.write {
-//                    delete item when clicked
+                    //                    delete item when clicked
                     realm.delete(item)
                 }
             } catch {
@@ -78,12 +79,11 @@ class TodoListViewController: UIViewController {
         }
     }
     
-    func generateRandomHEXColor() -> String {
-        return randomColor(hue: .random, luminosity: .light).hexString()
-    }
-
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        self.title = selectedCategory?.name
+        
         view.addSubview(tableView)
         tableView.frame = view.bounds
         tableView.delegate = self
@@ -93,6 +93,14 @@ class TodoListViewController: UIViewController {
         search.searchResultsUpdater = self
         search.obscuresBackgroundDuringPresentation = false
         navigationItem.searchController = search
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        self.navigationController?.navigationBar.scrollEdgeAppearance?.backgroundColor = UIColor(selectedCategory?.colour ?? "#FFF")
+        self.navigationController?.navigationBar.standardAppearance.backgroundColor = UIColor(selectedCategory?.colour ?? "#FFF")
+        self.title = selectedCategory?.name
     }
 }
 
@@ -119,6 +127,13 @@ extension TodoListViewController: UITableViewDelegate, UITableViewDataSource {
             cell.content = item.title
             cell.accessoryType = item.done ? .checkmark : .none
             cell.backgroundColor = UIColor(todoItems?[indexPath.row].colour ?? "#FFF")
+            
+            var colourPercentage = (10 * indexPath.row) + 25
+            if colourPercentage >= 60 && colourPercentage <= 70 {
+                colourPercentage = 80
+            }
+            let selectedCatColour = UIColor(selectedCategory?.colour ?? "#FFF")
+            cell.textColor = UIColor(.black).toColor(color: selectedCatColour, percentage: CGFloat(colourPercentage))
         } else {
             cell.content = "No items added"
         }
@@ -127,11 +142,10 @@ extension TodoListViewController: UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        
         if let item = todoItems?[indexPath.row] {
             do {
                 try realm.write {
-//                    select/deselect item when clicked
+                    //                    select/deselect item when clicked
                     item.done = !item.done
                 }
             } catch {
@@ -166,5 +180,35 @@ extension TodoListViewController: UISearchResultsUpdating {
         } else {
             loadItems()
         }
+    }
+}
+
+//MARK: - UIColor
+
+extension UIColor {
+    func toColor(color: UIColor, percentage: CGFloat) -> UIColor {
+        let percentage = max(min(percentage, 100), 0) / 100
+        switch percentage {
+        case 0: return self
+        case 1: return color
+        default:
+            var (r1, g1, b1, a1): (CGFloat, CGFloat, CGFloat, CGFloat) = (0, 0, 0, 0)
+            var (r2, g2, b2, a2): (CGFloat, CGFloat, CGFloat, CGFloat) = (0, 0, 0, 0)
+            guard self.getRed(&r1, green: &g1, blue: &b1, alpha: &a1) else { return self }
+            guard color.getRed(&r2, green: &g2, blue: &b2, alpha: &a2) else { return self }
+            
+            return UIColor(red: CGFloat(r1 + (r2 - r1) * percentage),
+                           green: CGFloat(g1 + (g2 - g1) * percentage),
+                           blue: CGFloat(b1 + (b2 - b1) * percentage),
+                           alpha: CGFloat(a1 + (a2 - a1) * percentage))
+        }
+    }
+    
+    var isDarkColor: Bool {
+        var r, g, b, a: CGFloat
+        (r, g, b, a) = (0, 0, 0, 0)
+        self.getRed(&r, green: &g, blue: &b, alpha: &a)
+        let lum = 0.2126 * r + 0.7152 * g + 0.0722 * b
+        return  lum < 0.50
     }
 }

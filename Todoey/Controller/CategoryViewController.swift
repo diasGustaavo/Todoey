@@ -44,6 +44,8 @@ class CategoryViewController: UIViewController {
             newCategory.colour = self.generateRandomHEXColor()
             
             self.save(category: newCategory)
+            self.navigationController?.navigationBar.scrollEdgeAppearance?.backgroundColor = UIColor(self.categories?[(self.categories?.count ?? 1) - 1 ].colour ?? "#FFF")
+            self.navigationController?.navigationBar.standardAppearance.backgroundColor = UIColor(self.categories?[(self.categories?.count ?? 1) - 1 ].colour ?? "#FFF")
         }
         
         alert.addTextField { alertTextField in
